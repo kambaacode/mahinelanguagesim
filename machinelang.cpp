@@ -2,6 +2,20 @@
 
 using namespace std;
 
+int fun(char IR)
+{
+    int Register_number;
+     if(IR >= 'A' && IR <= 'F')
+        {
+            Register_number = IR - '7';
+        }
+        else
+        {    
+            Register_number = IR - '0';
+        }
+    return Register_number;
+}
+
 
 string to_hexa(vector <string> Regi , int x1 , int x2)
 {
@@ -81,11 +95,9 @@ public:
     {
         IR = lines[counter];
         counter++;
+        cout << counter << " ";
     }
 };
-
-//5 2 3 4
-//
 
 class Registers: public CPU
 {
@@ -113,6 +125,8 @@ protected:
     int Register_number;
     int Register_number1;
     int Register_number2;
+    string str;
+    map <string , string> mem;
 public:
 
 instructions(vector <string> codes) : Registers(codes){}
@@ -122,28 +136,43 @@ instructions(vector <string> codes) : Registers(codes){}
         switch (IR[0])
         {
         case '1':
-            
+                Register_number = fun(IR[1]);
+                Reg[Register_number] = mem[IR.substr(2)];
             break;
         case '2':
-            Reg[IR[1] - '0'] = IR.substr(2);
+         if(IR[1] >= 'A' && IR[1] <= 'F')
+            {
+                Register_number = IR[1] - '7';
+                Reg[Register_number] = IR.substr(2);
+            }
+            else
+            {    
+                Register_number = IR[1] - '0';
+            }
+            Reg[Register_number] = IR.substr(2);
             break;
         case '3':
+            Register_number = fun(IR[1]);
+            str = IR.substr(2);
+            mem.insert({str , Reg[Register_number]});
             break;
         case '4':
-            Register_number1 = IR[2] - '0';
-            Register_number2 = IR[3] - '0'; 
-            if(Reg[Register_number1] != "0")
-            {
-                Reg[Register_number2] = Reg[Register_number1];
-            }
+            Register_number1 = fun(IR[2]);
+            Register_number2 = fun(IR[3]); 
+            Reg[Register_number2] = Reg[Register_number1];
             break;
         case '5':
-            Register_number = IR[1] - '0';
-            Register_number1 = IR[2] - '0';
-            Register_number2 = IR[3] - '0';
-            Reg[Register_number] = to_hexa(Reg , Register_number1 , Register_number2) ;
+           Register_number = fun(IR[1]);
+           Register_number1 = fun(IR[2]);
+           Register_number2 = fun(IR[3]);
+           Reg[Register_number] = to_hexa(Reg,Register_number1,Register_number2);
             break;
         case 'B':
+            Register_number = IR[1] - '0';
+            if(Reg[Register_number] == Reg[0])
+            {
+                counter ++;    
+            }
             break;
         case 'C':
             break;
@@ -161,26 +190,20 @@ instructions(vector <string> codes) : Registers(codes){}
 
 int main()
 {
-    fstream myFile;
-    myFile.open("memory.txt",ios_base :: out);
-    if(myFile.is_open())
-    {
-        string line;
-        while (getline(cin , line) && !line.empty())
-        {
-            myFile << line << endl;
-        }
-        myFile.close();
-    }
-    string str1 = "";
+    string str1,filename;
     vector <string> operations;
-    
-    myFile.open("memory.txt" , ios_base::in);
+    int choice;
+    cout << "Enter the name of the file: ";
+    cin >> filename;
 
-    if(myFile.is_open())
+    filename += ".txt"; 
+    fstream File;
+    File.open(filename , ios_base::in);
+    
+    if(File.is_open())
     {
         string line;
-        while (getline(myFile , line))
+        while (getline(File , line))
         {
             str1 = "";
             for(int i = 0 ; i < line.length() ; i++)
@@ -193,24 +216,55 @@ int main()
                 if(i == line.length() - 1) operations.push_back(str1);
             }
         }
-        myFile.close();
+        File.close();
     }
 
+    cout << "What do you want to display?\n"
+             << "1 - Memory\n"
+             << "2 - Registers\n"
+             << "3 - All: ";
+    cin >> choice;
+    
     Machine *ptr = new Memory(operations);
-    cout << "MEMORY: "<< endl;
-    ptr -> setMemory();
-    ptr -> showMemory();
-    cout << endl << "REGISTERS: " << endl;
     instructions R(operations);
-   
-    for(int i = 0;i < operations.size();i++){
-        if(R.getIR() == 'C')
-        {
-            break;
-        }
-        R.setIR();
-        R.setinstructions();
-        R.setRegisters();
+
+    if(choice == 1)
+    {
+        ptr -> setMemory();
+        ptr -> showMemory();
     }
-    R.ShowRegister();
+
+    if(choice == 2)
+    {
+        for(int i = 0;i < operations.size();i++){
+            if(R.getIR() == 'C')
+            {
+                break;
+            }
+            R.setIR();
+            R.setinstructions();
+            R.setRegisters();
+        }
+        R.ShowRegister();
+    }   
+    if(choice == 3)
+        {    
+        cout << "MEMORY: " << endl;
+        ptr -> setMemory();
+        ptr -> showMemory();
+            
+        cout << "Registers: " << endl;
+        for(int i = 0;i < operations.size();i++){
+            if(R.getIR() == 'C')
+            {
+                break;
+            }
+            R.setIR();
+            R.setinstructions();
+            R.setRegisters();
+        }
+        R.ShowRegister();
+     {
+    }
+}
 }
