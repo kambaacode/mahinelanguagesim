@@ -10,7 +10,7 @@ int fun(char IR)
             Register_number = IR - '7';
         }
         else
-        {    
+     {   
             Register_number = IR - '0';
         }
     return Register_number;
